@@ -9,6 +9,8 @@ public class RoyalPenguin extends Penguin {
 
     @Override
     public void useUniqueAction() {
-
+        if(singleUseAvailable){
+            this.setSingleUseAvailable(false);
+        }
     }
 }
