@@ -14,4 +14,17 @@ public enum Direction {
         this.dCol = dCol;
     }
 
+    public Direction getOpposite() {
+        if (this == UP){
+            return DOWN;
+        }
+        if (this == DOWN){ 
+            return UP;
+        }    
+        if (this == LEFT){
+            return RIGHT;
+        } else{
+        return LEFT;
+        }
+    }
 }

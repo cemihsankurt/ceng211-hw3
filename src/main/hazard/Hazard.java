@@ -1,17 +1,17 @@
 package main.hazard;
 
-import main.ITerrainObjects;
+import main.AbstractTerrainObject;
+import main.IMovable;
+import main.enums.Direction;
 
-public abstract class Hazard implements IHazards, ITerrainObjects {
-
-    private String id;
+public abstract class Hazard extends AbstractTerrainObject implements IHazards, IMovable {
 
     public Hazard(String id){
-        this.id = id;
+        super(id);
     }
 
     @Override
-    public String getStringRepresentation(){
-        return this.id;
+    public void slide(Direction direction){
+        
     }
 }

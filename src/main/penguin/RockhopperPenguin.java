@@ -9,6 +9,9 @@ public class RockhopperPenguin extends Penguin {
 
     @Override
     public void useUniqueAction() {
-
+        if(singleUseAvailable){
+            this.setJumpPrepActivated(true);
+            System.out.println(getStringRepresentation() + " prepares to jump over one hazard.");
+        }
     }
 }

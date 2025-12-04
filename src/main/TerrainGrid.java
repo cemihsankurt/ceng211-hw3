@@ -1,219 +1,141 @@
 package main;
 
-import main.enums.Direction;
-import main.enums.FoodType;
+import main.enums.*;
 import main.hazard.*;
 import main.penguin.*;
-
+import main.food.FoodItem;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class TerrainGrid {
-
-    private ArrayList<ArrayList<ITerrainObjects>> map;
-    private final int GRID_SIZE = 10;
-    private Random random = new Random();
-
-    private ArrayList<Penguin> penguins;
+    private static final int GRID_SIZE = 10;
+    private final List<List<AbstractTerrainObject>> map; 
+    private final List<Penguin> penguins = new ArrayList<>();
+    private final Random random = new Random();
 
     public TerrainGrid() {
         this.map = new ArrayList<>();
-        this.penguins = new ArrayList<>();
-
-        initializeEmtpyMap();
+        initializeEmptyMap();
+        
         generatePenguins();
         generateHazards();
         generateFoodItems();
     }
 
-    public void printMap() {
-        String horizontalLine = "-------------------------------------------------------------";
-
-        System.out.println(horizontalLine);
-
+    private void initializeEmptyMap() {
         for (int i = 0; i < GRID_SIZE; i++) {
-            System.out.print("|");
-
+            List<AbstractTerrainObject> row = new ArrayList<>();
             for (int j = 0; j < GRID_SIZE; j++) {
-                ITerrainObjects item = map.get(i).get(j);
-                String content;
-
-                if (item == null) {
-                    content = "    ";
-                } else {
-                    content = String.format("%-4s", item.getStringRepresentation());
-                }
-                System.out.print(" " + content + "|");
-            }
-
-            System.out.println();
-            System.out.println(horizontalLine);
-        }
-    }
-
-    public void movePenguin(Penguin p, Direction dir, int maxSteps) {
-
-        int currentRow = -1, currentCol = -1;
-
-        for(int i=0; i<GRID_SIZE; i++) {
-            for(int j=0; j<GRID_SIZE; j++) {
-                if(map.get(i).get(j) == p) {
-                    currentRow = i;
-                    currentCol = j;
-                    break;
-                }
-            }
-        }
-
-        if (currentRow == -1){
-            return;
-        }
-
-        System.out.println(p.getStringRepresentation() + " " + "is moving to " + dir);
-
-        int stepsTaken = 0;
-        boolean keepMoving = true;
-
-        while (keepMoving) {
-            int nextRow = currentRow + dir.dRow;
-            int nextCol = currentCol + dir.dCol;
-
-            if (nextRow < 0 || nextRow >= GRID_SIZE || nextCol < 0 || nextCol >= GRID_SIZE) {
-                map.get(currentRow).set(currentCol, null);
-                p.setEliminated(true);
-                System.out.println(p.getStringRepresentation() + "fell into water and eliminated");
-                return;
-            }
-
-            ITerrainObjects targetCell = map.get(nextRow).get(nextCol);
-
-            if (targetCell == null) {
-
-                map.get(nextRow).set(nextCol, p);
-                map.get(currentRow).set(currentCol, null);
-
-                currentRow = nextRow;
-                currentCol = nextCol;
-                stepsTaken++;
-
-                if (maxSteps != -1 && stepsTaken >= maxSteps) {
-                    System.out.println("Unique Action Used, Penguin Stopped.");
-                    keepMoving = false;
-                }
-
-            } else {
-                handleCollision(p, targetCell, nextRow, nextCol);
-                keepMoving = false;
-            }
-        }
-    }
-
-
-
-    private void initializeEmtpyMap(){
-        for(int i = 0; i < GRID_SIZE; i++){
-            ArrayList<ITerrainObjects> row = new ArrayList<>();
-            for(int j = 0; j < GRID_SIZE; j++){
                 row.add(null);
             }
             map.add(row);
         }
     }
 
-    private void generatePenguins(){
-        String [] names = {"P1","P2","P3"};
-
-        for(String name : names) {
+    private void generatePenguins() {
+        String[] names = {"P1", "P2", "P3"};
+        for (String name : names) {
             Penguin p = createRandomPenguin(name);
             penguins.add(p);
+            placeItemRandomly(p, true);
+        }
+    }
+    
+    private void generateHazards() {
+        for (int i = 0; i < 15; i++) {
+            Hazard h = createRandomHazard();
+            placeItemRandomly(h, false);
+        }
+    }
+    
+    private void generateFoodItems() {
+        for (int i = 0; i < 20; i++) {
+            FoodItem f = new FoodItem();
+            placeItemRandomly(f, false);
+        }
+    }
 
-            boolean placed = false;
-            while(!placed){
-                int row = random.nextInt(GRID_SIZE);
-                int col = random.nextInt(GRID_SIZE);
+    private void placeItemRandomly(AbstractTerrainObject item, boolean edgeOnly) {
+        boolean placed = false;
+        while (!placed) {
+            int row = random.nextInt(GRID_SIZE);
+            int col = random.nextInt(GRID_SIZE);
+            
+            boolean isEdge = (row == 0 || row == GRID_SIZE - 1 || col == 0 || col == GRID_SIZE - 1);
+            if (edgeOnly && !isEdge) continue;
 
-                boolean isEdge = (row == 0 || row == GRID_SIZE - 1 || col == 0 || col == GRID_SIZE - 1);
-
-                if(isEdge && map.get(row).get(col) == null){
-                    map.get(row).set(col, p);
-                    placed = true;
+            AbstractTerrainObject existing = map.get(row).get(col);
+            
+            boolean collisionConflict = false;
+            
+            if (existing != null) {
+                if (item instanceof Penguin || existing instanceof Penguin) {
+                    if (existing instanceof Penguin || existing instanceof Hazard) collisionConflict = true;
                 }
+                
+                if (item instanceof Hazard && existing instanceof FoodItem) collisionConflict = true;
+                if (existing instanceof Hazard && item instanceof FoodItem) collisionConflict = true;
+                if (item instanceof Hazard && existing instanceof Hazard) collisionConflict = true;
             }
 
-        }
-    }
-
-    private void generateHazards(){
-        for(int i = 0; i < 15; i++){
-            Hazard h = createRandomHazard();
-            placeItemRandomly(h);
-        }
-    }
-
-    private void generateFoodItems(){
-        for(int i = 0; i < 20; i++){
-            FoodType type = FoodType.values()[random.nextInt(FoodType.values().length)];
-            int weight = random.nextInt(5) + 1;
-
-            FoodItem f = new  FoodItem(type, weight);
-            placeItemRandomly(f);
-        }
-    }
-
-    private void placeItemRandomly(ITerrainObjects item){
-        boolean placed = false;
-
-        while(!placed){
-            int row =  random.nextInt(GRID_SIZE);
-            int col = random.nextInt(GRID_SIZE);
-
-            if(map.get(row).get(col) == null){
+            if (!collisionConflict) {
                 map.get(row).set(col, item);
+                item.setRow(row);
+                item.setCol(col);
                 placed = true;
             }
-
         }
-
     }
 
-    private Penguin createRandomPenguin(String name){
+    private Penguin createRandomPenguin(String name) {
         int type = random.nextInt(4);
-        switch (type){
-            case 0:
-                return new KingPenguin(name);
-            case 1:
-                return new EmperorPenguin(name);
-            case 2:
-                return new RoyalPenguin(name);
-            default:
-                return new RockhopperPenguin(name);
+        switch (type) {
+            case 0: return new KingPenguin(name);
+            case 1: return new EmperorPenguin(name);
+            case 2: return new RoyalPenguin(name);
+            default: return new RockhopperPenguin(name);
         }
     }
-
-    private Hazard createRandomHazard(){
+    
+    private Hazard createRandomHazard() {
         int type = random.nextInt(4);
-        switch (type){
-            case 0:
-                return new LightIceBlock();
-            case 1:
-                return new HeavyIceBlock();
-            case 2:
-                return new SeaLion();
-            default:
-                return new HoleInIce();
+        switch (type) {
+            case 0: return new LightIceBlock();
+            case 1: return new HeavyIceBlock();
+            case 2: return new SeaLion();
+            default: return new HoleInIce();
         }
     }
 
-    private void handleCollision(Penguin p, ITerrainObjects target, int row, int col){
-
-        if(target.getClass().equals(FoodItem.class)){
-            FoodItem f = (FoodItem)target;
-            p.addFood(f.getWeight());
-            System.out.println("Food ate: " + f.getStringRepresentation());
-        }
+    public void moveObject(AbstractTerrainObject obj, Direction dir) {
+        
     }
 
+    public void handleCollision(Penguin p, AbstractTerrainObject target, int nextR, int nextC, Direction dir) {
+        
+    }
+    
+    public boolean performSingleStep(Penguin p, int nextR, int nextC) {
+        return true; 
+    }
 
+    public boolean isValidLocation(int row, int col) { return row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE; }
+    public AbstractTerrainObject getObjectAt(int row, int col) { return isValidLocation(row, col) ? map.get(row).get(col) : null; }
+    public List<Penguin> getPenguins() { return penguins; }
 
-
+    public void printMap() {
+        String horizontalLine = "------------------------------------------";
+        System.out.println(horizontalLine);
+        for (int i = 0; i < GRID_SIZE; i++) {
+            System.out.print("|");
+            for (int j = 0; j < GRID_SIZE; j++) {
+                AbstractTerrainObject item = map.get(i).get(j);
+                String content = (item == null) ? " " : item.getStringRepresentation();
+                System.out.print(String.format(" %-3s|", content));
+            }
+            System.out.println();
+            System.out.println(horizontalLine);
+        }
+    }
 }
