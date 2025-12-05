@@ -184,9 +184,15 @@ public class IcyTerrain {
         return Direction.values()[random.nextInt(Direction.values().length)];
     }
 
-    private boolean isSafeAndLeadsToFood(Penguin p, Direction dir) { return false; }
-    private boolean isSafeAndLeadsToHazard(Penguin p, Direction dir) { return false; }
-    private boolean isDirectionTowardHazard(Penguin p, Direction dir, Class<?> excludeHazard) { return false; }
+    private boolean isSafeAndLeadsToFood(Penguin p, Direction dir) {
+        return false;
+    }
+    private boolean isSafeAndLeadsToHazard(Penguin p, Direction dir) {
+        return false;
+    }
+    private boolean isDirectionTowardHazard(Penguin p, Direction dir, Class<?> excludeHazard) {
+        return false;
+    }
     
     private void endGame() {
         System.out.println("\n***** GAME OVER *****");

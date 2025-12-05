@@ -120,12 +120,18 @@ public class TerrainGrid {
         return true; 
     }
 
-    public boolean isValidLocation(int row, int col) { return row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE; }
-    public AbstractTerrainObject getObjectAt(int row, int col) { return isValidLocation(row, col) ? map.get(row).get(col) : null; }
-    public List<Penguin> getPenguins() { return penguins; }
+    public boolean isValidLocation(int row, int col) {
+        return row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE;
+    }
+    public AbstractTerrainObject getObjectAt(int row, int col) {
+        return isValidLocation(row, col) ? map.get(row).get(col) : null;
+    }
+    public List<Penguin> getPenguins() {
+        return penguins;
+    }
 
     public void printMap() {
-        String horizontalLine = "------------------------------------------";
+        String horizontalLine = "-------------------------------------------------";
         System.out.println(horizontalLine);
         for (int i = 0; i < GRID_SIZE; i++) {
             System.out.print("|");
